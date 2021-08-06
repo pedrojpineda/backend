@@ -1,0 +1,23 @@
+{
+  "name": "servidor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.12"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.14.8",
+    "@babel/core": "^7.15.0",
+    "@babel/node": "^7.14.9"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "babel-node index.js",
+    "start": "nodemon --exec npm run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

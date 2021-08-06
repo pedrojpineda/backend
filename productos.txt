@@ -1,0 +1,20 @@
+[
+    {
+        "title": "Bio oil",
+        "price": 5,
+        "thumbnail": "img/bio-oil.jpg",
+        "id": 1
+    },
+    {
+        "title": "Exfoliante facial",
+        "price": 3,
+        "thumbnail": "img/exfoliante-facial.jpg",
+        "id": 2
+    },
+    {
+        "title": "Agua de rosas",
+        "price": 2,
+        "thumbnail": "img/agua-de-rosas.jpg",
+        "id": 3
+    }
+]
