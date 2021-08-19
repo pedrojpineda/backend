@@ -1,9 +1,20 @@
 const express = require('express');
 const app = express();
-const router = express.Router();
 
+const handlebars = require("express-handlebars");
+
+const router = express.Router();
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
+
+app.engine("hbs", handlebars({
+    extname: ".hbs",
+    defaultLayout: 'index.hbs',
+    layoutsDir: __dirname + "/views/layouts"
+    })
+);
+app.set("view engine", "hbs");
+app.set("views", "./views");
 
 class Producto {
     constructor(id, title, price, thumbnail) {
@@ -12,67 +23,76 @@ class Producto {
         this.price = price;
         this.thumbnail = thumbnail;
     }
-}
+};
 
-const productos = [];
+const productos = {
+    items: []
+};
 let id = 1;
-
-router.get('/productos/listar', (req, res) => {
-    if(productos.length > 0) {
-        res.send(productos);
-    } else {
-        res.send({error: 'no hay productos cargados'});
-    }
-});
-
-router.get('/productos/listar/:id', (req, res) => {
-    let producto = productos.find(producto => producto.id === Number(req.params.id));
-    if(producto) {
-        res.send(producto);
-    } else {
-        res.send({error: 'producto no encontrado'});
-    }
-});
 
 router.post('/productos/guardar', (req, res) => {
     let nuevoProducto = req.body;
     nuevoProducto.id = id++;
-    productos.push(new Producto(
+    productos.items.push(new Producto(
         nuevoProducto.id,
         nuevoProducto.title,
         nuevoProducto.price,
         nuevoProducto.thumbnail
     ));
-    res.send(nuevoProducto);
+    res.redirect('/');
+});
+
+router.get('/productos/vista', (req, res) => {
+    res.render("main", productos);
+});
+
+router.get('/productos/listar', (req, res) => {
+    if (productos.items.length > 0) {
+        res.send(productos.items);
+    } else {
+        res.send({ error: 'No hay productos cargados' });
+    }
+});
+
+router.get('/productos/listar/:id', (req, res) => {
+    let producto = productos.items.find(producto => producto.id === Number(req.params.id));
+    if (producto) {
+        res.send(producto);
+    } else {
+        res.send({ error: 'Producto no encontrado' });
+    }
 });
 
 router.put('/productos/actualizar/:id', (req, res) => {
-    let producto = productos.find(producto => producto.id === Number(req.params.id));
-    let index = productos.findIndex(producto => producto.id === Number(req.params.id));
-    if(producto) {
+    let producto = productos.items.find(producto => producto.id === Number(req.params.id));
+    let index = productos.items.findIndex(producto => producto.id === Number(req.params.id));
+    if (producto) {
         producto = req.body;
         producto.id = Number(req.params.id);
-        productos[index] = producto;
+        productos.items[index] = producto;
         res.send(producto);
     } else {
-        res.send({error: 'producto no encontrado'});
+        res.send({ error: 'Producto no encontrado' });
     }
 });
 
 router.delete('/productos/borrar/:id', (req, res) => {
-    let producto = productos.find(producto => producto.id === Number(req.params.id));
-    let index = productos.findIndex(producto => producto.id === Number(req.params.id));
-    if(producto) {
-        let productoBorrado = productos.splice(index, 1);
+    let producto = productos.items.find(producto => producto.id === Number(req.params.id));
+    let index = productos.items.findIndex(producto => producto.id === Number(req.params.id));
+    if (producto) {
+        let productoBorrado = productos.items.splice(index, 1);
         res.send(productoBorrado);
     } else {
-        res.send({error: 'producto no encontrado'});
+        res.send({ error: 'Producto no encontrado' });
     }
 });
 
 app.use('/api', router);
 app.use(express.static('public'));
 
-const server = app.listen(8080, () => {
-    console.log('Escuchando en el puerto 8080');
+const PORT = 8080;
+
+const server = app.listen(PORT, err => {
+    if(err) throw new Error(`Error en el servidor ${err}`)
+    console.log(`Escuchando en el puerto ${PORT}`);
 });
