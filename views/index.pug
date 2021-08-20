@@ -1,0 +1,36 @@
+html(lang="es")
+    head
+        title Productos en Pug
+        link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous")
+    body
+        #container
+            .row.justify-content-center
+                .col-md-6.mt-5
+                    h1.text-center Vista de productos
+                    table.table.table-striped.table-hover.mt-5.text-center
+                        thead
+                            tr
+                                th # 
+                                th Title
+                                th Price
+                                th Thumbnail
+                        tbody
+                            if items.length != 0
+                                each item of items
+                                    tr(style="vertical-align: middle;")
+                                        th= item.id
+                                        td= item.title
+                                        td= item.price
+                                        td
+                                            img(src=item.thumbnail height="100")
+                            else
+                                tr
+                                    td.text-center(colspan="4") No hay productos
+                                tr
+
+
+                        
+        script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+        crossorigin="anonymous")

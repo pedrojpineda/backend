@@ -1,20 +1,12 @@
 const express = require('express');
 const app = express();
 
-const handlebars = require("express-handlebars");
-
 const router = express.Router();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.engine("hbs", handlebars({
-    extname: ".hbs",
-    defaultLayout: 'index.hbs',
-    layoutsDir: __dirname + "/views/layouts"
-    })
-);
-app.set("view engine", "hbs");
 app.set("views", "./views");
+app.set("view engine", "pug");
 
 class Producto {
     constructor(id, title, price, thumbnail) {
@@ -43,7 +35,7 @@ router.post('/productos/guardar', (req, res) => {
 });
 
 router.get('/productos/vista', (req, res) => {
-    res.render("main", productos);
+    res.render("index", productos);
 });
 
 router.get('/productos/listar', (req, res) => {
@@ -88,7 +80,7 @@ router.delete('/productos/borrar/:id', (req, res) => {
 });
 
 app.use('/api', router);
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/public'));
 
 const PORT = 8080;
 
