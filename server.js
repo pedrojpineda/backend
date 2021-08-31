@@ -1,11 +1,11 @@
 const express = require('express');
 const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 
 const router = express.Router();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.set("view engine", "ejs");
 
 class Producto {
     constructor(id, title, price, thumbnail) {
@@ -21,6 +21,21 @@ const productos = {
 };
 let id = 1;
 
+// WEBSOCKETS
+
+io.on('connection', (socket) => {
+    console.log('Cliente conectado');
+    socket.emit('productos', productos.items);
+
+    socket.on('item', (data) => {
+        data.id = id++
+        productos.items.push(data);
+        io.sockets.emit('productos', productos.items);
+    });
+});
+
+// RUTAS
+
 router.post('/productos/guardar', (req, res) => {
     let nuevoProducto = req.body;
     nuevoProducto.id = id++;
@@ -33,8 +48,8 @@ router.post('/productos/guardar', (req, res) => {
     res.redirect('/');
 });
 
-router.get('/productos/vista', (req, res) => {
-    res.render("index", productos);
+router.get('/', (req, res) => {
+    res.send('index.html');
 });
 
 router.get('/productos/listar', (req, res) => {
@@ -83,7 +98,7 @@ app.use(express.static(__dirname + '/public'));
 
 const PORT = 8080;
 
-const server = app.listen(PORT, err => {
-    if(err) throw new Error(`Error en el servidor ${err}`)
+server.listen(PORT, err => {
+    if (err) throw new Error(`Error en el servidor ${err}`)
     console.log(`Escuchando en el puerto ${PORT}`);
 });
