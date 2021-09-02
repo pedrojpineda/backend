@@ -6,7 +6,9 @@ const io = require('socket.io')(server);
 const router = express.Router();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const fs = require('fs');
 
+// PRODUCTOS
 class Producto {
     constructor(id, title, price, thumbnail) {
         this.id = id;
@@ -21,18 +23,33 @@ const productos = {
 };
 let id = 1;
 
+// MENSAJES
+
+const chat = {
+    mensajes: []
+};
+
 // WEBSOCKETS
 
 io.on('connection', (socket) => {
     console.log('Cliente conectado');
-    socket.emit('productos', productos.items);
 
+    socket.emit('productos', productos.items);
     socket.on('item', (data) => {
         data.id = id++
         productos.items.push(data);
         io.sockets.emit('productos', productos.items);
     });
+
+    socket.emit('mensajes', chat.mensajes);
+    socket.on('mensaje', (data) => {
+        data.fecha = new Date();
+        chat.mensajes.push(data);
+        //fs.writeFileSync('./productos.json', JSON.stringify(chat.mensajes));
+        io.sockets.emit('mensajes', chat.mensajes);
+    });
 });
+
 
 // RUTAS
 

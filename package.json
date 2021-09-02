@@ -15,6 +15,10 @@
     "@babel/core": "^7.15.0",
     "@babel/node": "^7.14.9"
   },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "babel-node server.js",

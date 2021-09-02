@@ -1,4 +1,6 @@
 const socket = io.connect();
+
+// PRODUCTOS
 const my_template = document.getElementById('template');
 const to_render = document.getElementById('to_render');
 
@@ -15,5 +17,24 @@ function addProducto() {
         thumbnail: document.getElementById('thumbnail').value
     };
     socket.emit('item', item);
+    return false;
+};
+
+// CHAT
+const my_chat = document.getElementById('chat');
+const chat_render = document.getElementById('chat_render');
+
+socket.on('mensajes', data => {
+    console.log(data);
+    const chat = ejs.compile(my_chat.innerHTML);
+    chat_render.innerHTML = chat({ mensajes: data })
+})
+
+function addMensaje() {
+    let mensaje = {
+        email: document.getElementById('email').value,
+        mensaje: document.getElementById('mensaje').value,
+    };
+    socket.emit('mensaje', mensaje);
     return false;
 };
