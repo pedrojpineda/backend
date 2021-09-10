@@ -8,7 +8,7 @@ socket.on('productos', data => {
     to_render.innerHTML = template({ items: data })
 })
 
-function addProducto() {
+const addProducto = () => {
     let item = {
         title: document.getElementById('title').value,
         price: document.getElementById('price').value,
