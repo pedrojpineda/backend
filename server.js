@@ -1,14 +1,30 @@
 const express = require('express');
 const app = express();
 const server = require('http').Server(app);
-const io = require('socket.io')(server);
-const { options } = require('./controllers/sqlite3');
-const { knex } = require('../controllers/serverdb')
+const mongoose = require('mongoose');
+const productoModel = require("./schemas/productos.js");
+const mensajeModel = require("./schemas/mensajes.js");
 
 const routerProductos = express.Router();
+const routerMensajes = express.Router();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const URL = 'mongodb://localhost:27017/ecommerce'
+
+const ConnectionToDatabase = async () => {
+    try {
+        await mongoose.connect(URL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        })
+        console.log("Base de datos conectada");
+    } catch (error) {
+        throw new Error();
+    }
+};
+ 
 let administrador = true;
 
 // RUTAS PRODUCTOS
@@ -17,38 +33,31 @@ app.get('/', (req, res) => {
     res.send('Bienvenidos a la tienda online');
 });
 
-routerProductos.get('/listar', (req, res) => {
+routerProductos.get('/listar', async (req, res) => {
     try {
-        knex("productos").select("*").then((data) => {
-            if (data > 0) {
-                res.send(data)
-            } else {
-                res.send("No existen productos disponibles")
-            }
-        });
-    } catch (err) {
-        console.error(err);
+        const productos = await productoModel.find({});
+        res.send(productos);
+    } catch (error) {
+        console.log(error)
+        res.json(error);
     }
 });
 
-routerProductos.get('/listar/:id', (req, res) => {
-    knex('productos').where({ 'id': req.params.id }).then((data) => res.json(data[0]))
+routerProductos.get('/listar/:id', async (req, res) => {
+    try {
+        const producto = await productoModel.findById(req.params.id)
+        res.send(producto);
+    } catch (error) {
+        console.log(error)
+    }
 });
 
-routerProductos.post('/agregar', (req, res) => {
+routerProductos.post('/agregar', async (req, res) => {
     if (administrador) {
         try {
-            let nuevoProducto = req.body;
-            nuevoProducto.timestamp = Date.now();
-            knex('productos').insert({
-                timestamp: nuevoProducto.timestamp,
-                nombre: nuevoProducto.nombre,
-                descripcion: nuevoProducto.descripcion,
-                codigo: parseInt(nuevoProducto.codigo),
-                foto: nuevoProducto.foto,
-                precio: parseInt(nuevoProducto.precio),
-                stock: parseInt(nuevoProducto.stock),
-            }).then(id => knex('productos').where({ 'id': id[0] }).then((data) => res.json(data[0])))
+            let nuevoProducto = new productoModel(req.body);
+            await nuevoProducto.save();
+            res.send(nuevoProducto.nombre + ' agregado al inventario');
         } catch (err) {
             res.status(404).json(err)
         }
@@ -57,58 +66,90 @@ routerProductos.post('/agregar', (req, res) => {
     }
 });
 
-routerProductos.put('/actualizar/:id', (req, res) => {
+routerProductos.put('/actualizar/:id', async (req, res) => {
     if (administrador) {
         try {
-            let id = parseInt(req.params.id)
-            knex('productos').where({ id: id }).update(req.query).then((data) => res.json(data[0]))
+            let producto = await productoModel.findByIdAndUpdate(req.params.id, req.body);
+            res.send(producto.nombre + ' actualizado en el inventario');
         } catch (err) {
-            console.error(err)
+            res.status(404).json(err)
         }
     } else {
         res.send({ error: -1, descripcion: 'Ruta /actualizar con método put no autorizada' });
     }
 });
 
-routerProductos.delete('/borrar/:id', (req, res) => {
+routerProductos.delete('/borrar/:id', async (req, res) => {
     if (administrador) {
         try {
-            let id = parseInt(req.params.id)
-            knex("productos").where({ "id": id }).then(data => {
-                if (data.length > 0) {
-                    knex('productos').where({ id: id })
-                        .del().then(() => res.json("Producto eliminado con éxito"))
-                } else {
-                    res.json({ msg: "El producto con el id " + id + " no existe" })
-                }
-            })
-        } catch (err) {
-            console.error(err)
-            res.status(400).json("Ha ocurrido un error")
-        }
+        let producto = await productoModel.findByIdAndDelete(req.params.id);
+        res.send(producto);
+    } catch (err) {
+        res.status(404).json(err)
+    }
     } else {
         res.send({ error: -1, descripcion: 'Ruta /borrar con método delete no autorizada' });
     }
 });
 
-// WEBSOCKETS
+// RUTAS MENSAJES
 
-io.on('connection', (socket) => {
-    console.log('Cliente conectado');
-    socket.emit('productos', productos);
+routerMensajes.get('/listar', async (req, res) => {
+    try {
+        const mensajes = await mensajeModel.find({});
+        res.send(mensajes);
+    } catch (error) {
+        console.log(error)
+        res.json(error);
+    }
+});
 
-    socket.on('item', (data) => {
-        data.id = id++
-        productos.push(data);
-        io.sockets.emit('productos', productos);
-    });
+routerMensajes.get('/listar/:id', async (req, res) => {
+    try {
+        const mensaje = await mensajeModel.findById(req.params.id)
+        res.send(mensaje);
+    } catch (error) {
+        console.log(error)
+    }
+});
+
+routerMensajes.post('/agregar', async (req, res) => {
+        try {
+            let nuevoMensaje = new mensajeModel(req.body);
+            await nuevoMensaje.save();
+            res.send(nuevoMensaje);
+        } catch (err) {
+            res.status(404).json(err)
+        }
+});
+
+routerMensajes.put('/actualizar/:id', async (req, res) => {
+        try {
+            let mensaje = await mensajeModel.findByIdAndUpdate(req.params.id, req.body);
+            res.send(mensaje);
+        } catch (err) {
+            res.status(404).json(err)
+        }
+});
+
+routerMensajes.delete('/borrar/:id', async (req, res) => {
+        try {
+        let mensaje = await mensajeModel.findByIdAndDelete(req.params.id);
+        res.send(mensaje);
+    } catch (err) {
+        res.status(404).json(err)
+    }
 });
 
 
 app.use('/productos', routerProductos);
+app.use('/mensajes', routerMensajes);
+
 app.use(express.static(__dirname + '/public'));
 
 const PORT = 8080;
+
+ConnectionToDatabase();
 
 server.listen(PORT, err => {
     if (err) throw new Error(`Error en el servidor ${err}`)
